@@ -1,6 +1,8 @@
 # Prism
 
-Android social-news app (Kotlin + Jetpack Compose + Firebase). Social MVP: accounts, interests, Home/Interests feeds, article likes, friends, and DMs (**text + article shares**). No Play Store required — install via APK.
+A social media app that promotes staying up to date with world news and conversing with people of different views and values.
+
+Android client: **Kotlin + Jetpack Compose + Firebase**. Social MVP: accounts, interests, Home/Interests feeds, article likes, friends, and DMs (**text + article shares**). No Play Store required — install via APK.
 
 **Storage / image DMs are deferred** so you can stay on Firebase’s free Spark plan (Storage often requires Blaze). Easy to add later.
 
@@ -53,7 +55,7 @@ Also create this index so DMs load after accepting a friend:
 
 Definitions are also in `firebase/firestore.indexes.json`. After Run, if Logcat shows a Firebase index URL, you can click that link to create the index automatically.
 
-Optional later: Storage (image DMs)
+### Optional later: Storage (image DMs)
 Only when you want photo messages (often requires Blaze pay-as-you-go; free quotas usually cover demos):
 1. **Build** → **Storage** → Get started
 2. Publish rules from `firebase/storage.rules`
