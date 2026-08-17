@@ -1,0 +1,98 @@
+[
+  {
+    "title": "Takeaways from the first conference focused on transitioning away from fossil fuels",
+    "description": "Diplomats and advocates in Colombia shift the debate from whether to phase out fossil fuels to how to finance the transition.",
+    "body": "A first-of-its-kind international conference on moving away from fossil fuels wrapped up in Santa Marta, Colombia, with financing emerging as one of the biggest obstacles. Officials and experts from dozens of countries discussed labor transitions and coordination, even without binding commitments.",
+    "source": "Associated Press",
+    "topic": "Climate Change",
+    "bias": "Neutral",
+    "scope": "international",
+    "interests": ["Climate Change", "International", "Science"],
+    "url": "https://apnews.com/article/climate-change-fossil-fuels-colombia-takeaways-fa4bc18a9ca20abcb61b26ba3aa9717a",
+    "createdAt": 1723680000000
+  },
+  {
+    "title": "AMD clinches second mega chip supply deal, this time with Meta",
+    "description": "AMD agrees to sell up to $60 billion of AI chips to Meta over five years as hyperscalers lock in accelerator supply.",
+    "body": "Advanced Micro Devices said it will supply Meta with large volumes of AI chips under a multi-year deal that also gives Meta an option to buy a stake in AMD. The agreement highlights intensifying competition in AI accelerators beyond a single dominant vendor.",
+    "source": "Reuters",
+    "topic": "AI",
+    "bias": "Neutral",
+    "scope": "international",
+    "interests": ["AI", "Technology", "Economy"],
+    "url": "https://www.reuters.com/business/amd-clinches-second-mega-chip-supply-deal-this-time-with-meta-2026-02-24/",
+    "createdAt": 1723683600000
+  },
+  {
+    "title": "FAA overhaul to cost $31.5 billion, transportation secretary tells Congress",
+    "description": "The Transportation Department puts a price tag on rebuilding the U.S. air traffic control system and asks Congress for more funding.",
+    "body": "Transportation Secretary Sean Duffy told lawmakers it will take $31.5 billion to modernize air traffic control, after a $12.5 billion down payment in a major spending package. The project includes replacing aging radios, radars, and communications gear.",
+    "source": "CNN",
+    "topic": "Politics",
+    "bias": "Democrat-leaning",
+    "scope": "national",
+    "interests": ["Politics", "National", "Economy"],
+    "url": "https://www.cnn.com/2025/07/16/us/atc-overhaul-cost",
+    "createdAt": 1723687200000
+  },
+  {
+    "title": "House passes $70 billion immigration bill, sends it to Trump's desk",
+    "description": "A GOP-backed enforcement and border security funding package clears the House after a long fight over ICE and CBP budgets.",
+    "body": "The House passed a $70 billion immigration enforcement measure funding ICE and Border Patrol through fiscal 2029. Democrats opposed the package; Republicans framed it as locking in border security resources.",
+    "source": "Fox News",
+    "topic": "Immigration",
+    "bias": "Republican-leaning",
+    "scope": "national",
+    "interests": ["Immigration", "Politics", "National"],
+    "url": "https://www.foxnews.com/politics/trump-locks-ice-funding-through-end-presidency-after-house-passes-70b-package",
+    "createdAt": 1723690800000
+  },
+  {
+    "title": "London's nighttime economy expects a boost from expanded subway hours",
+    "description": "London expands overnight Tube service on weekends to support night-shift workers and late-night businesses.",
+    "body": "London began all-night service on key Underground lines on Fridays and Saturdays, aiming to grow the nighttime economy and help people get home after late shifts. Officials hoped bars, venues, and cultural spots would benefit from longer transit hours.",
+    "source": "NPR",
+    "topic": "Local",
+    "bias": "Neutral",
+    "scope": "local",
+    "interests": ["Local", "Economy"],
+    "url": "https://www.npr.org/2016/08/22/490895616/london-s-nighttime-economy-expects-a-boost-from-expanded-subway-hours",
+    "createdAt": 1723694400000
+  },
+  {
+    "title": "Fears of renewed Gaza war as Hamas disarmament talks stall",
+    "description": "Ceasefire-related negotiations hit a deadlock while humanitarian conditions in Gaza remain severe.",
+    "body": "Talks focused on disarmament and next phases of a fragile ceasefire have stalled, with each side accusing the other of violations. Mediators and guarantor states continue efforts as civilians face displacement and aid shortages.",
+    "source": "BBC",
+    "topic": "Wars & Conflicts",
+    "bias": "Neutral",
+    "scope": "international",
+    "interests": ["Wars & Conflicts", "International", "Politics"],
+    "url": "https://www.bbc.com/news/articles/cd6p5l3n2q3o",
+    "createdAt": 1723698000000
+  },
+  {
+    "title": "Supreme Court restores telehealth access to abortion pill mifepristone",
+    "description": "The high court blocks a lower-court order that had threatened mail and pharmacy access to mifepristone.",
+    "body": "The Supreme Court temporarily restored broad access to the abortion pill mifepristone, allowing prescriptions via pharmacies or mail without an in-person visit while litigation continues. The fight is one of the major post-Roe abortion policy flashpoints.",
+    "source": "Associated Press",
+    "topic": "Abortion",
+    "bias": "Neutral",
+    "scope": "national",
+    "interests": ["Abortion", "Politics", "Health", "National"],
+    "url": "https://apnews.com/article/abortion-pills-mifepristone-supreme-court-louisiana-0533e83d67148fdfec53b1d0d30c1e8a",
+    "createdAt": 1723701600000
+  },
+  {
+    "title": "SB 53, the landmark AI transparency bill, is now law in California",
+    "description": "California requires large AI developers to publish safety frameworks and report critical incidents under a new transparency law.",
+    "body": "Governor Gavin Newsom signed the Transparency in Frontier Artificial Intelligence Act, requiring major AI companies to publish safety and security frameworks and protecting whistleblowers. Supporters call it a landmark transparency step; critics note it relies heavily on disclosed frameworks rather than hard testing mandates.",
+    "source": "The Verge",
+    "topic": "Technology",
+    "bias": "Neutral",
+    "scope": "national",
+    "interests": ["Technology", "AI", "National"],
+    "url": "https://www.theverge.com/ai-artificial-intelligence/787918/sb-53-the-landmark-ai-transparency-bill-is-now-law-in-california",
+    "createdAt": 1723705200000
+  }
+]
