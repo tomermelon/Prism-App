@@ -24,10 +24,42 @@ service cloud.firestore {
 
     match /articles/{articleId} {
       allow read: if signedIn();
-      allow write: if false;
+      allow create, delete: if false;
+      // Clients may only bump engagement counters (ingest uses Admin SDK).
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['likeCount', 'shareCount']);
     }
 
     match /likes/{likeId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid;
+      allow delete: if signedIn()
+        && resource.data.uid == request.auth.uid;
+      allow update: if false;
+    }
+
+    match /articles/{articleId}/comments/{commentId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.keys().hasAll([
+          'authorId', 'authorUsername', 'text', 'parentId', 'likeCount', 'createdAt'
+        ])
+        && request.resource.data.likeCount == 0
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 2000;
+      // Likes bump likeCount only; authors cannot edit text in v1.
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount'])
+        && request.resource.data.likeCount is int
+        && request.resource.data.likeCount >= 0;
+      allow delete: if false;
+    }
+
+    match /commentLikes/{likeId} {
       allow read: if signedIn();
       allow create: if signedIn()
         && request.resource.data.uid == request.auth.uid;

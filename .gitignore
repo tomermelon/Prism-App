@@ -12,3 +12,11 @@
 *.ap_
 *.aab
 app/google-services.json
+
+# News ingest secrets (local script)
+seed/.env
+seed/*firebase-adminsdk*.json
+seed/secrets/
+seed/.venv/
+**/__pycache__/
+*.pyc

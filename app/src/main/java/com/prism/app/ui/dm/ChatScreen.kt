@@ -64,6 +64,7 @@ fun ChatScreen(
     conversationId: String,
     title: String,
     uid: String,
+    initialDraft: String = "",
     pendingArticleShare: Article? = null,
     onArticleShared: () -> Unit = {},
     onOpenArticle: (String) -> Unit,
@@ -72,7 +73,7 @@ fun ChatScreen(
     articleRepository: ArticleRepository = remember { ArticleRepository() }
 ) {
     var messages by remember { mutableStateOf<List<ChatMessage>>(emptyList()) }
-    var draft by remember { mutableStateOf("") }
+    var draft by remember(initialDraft) { mutableStateOf(initialDraft) }
     var showArticlePicker by remember { mutableStateOf(false) }
     var articleQuery by remember { mutableStateOf("") }
     var articleResults by remember { mutableStateOf<List<Article>>(emptyList()) }

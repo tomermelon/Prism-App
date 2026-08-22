@@ -5,6 +5,8 @@ object FirebasePaths {
     const val USERNAMES = "usernames"
     const val ARTICLES = "articles"
     const val LIKES = "likes"
+    const val COMMENTS = "comments"
+    const val COMMENT_LIKES = "commentLikes"
     const val FRIEND_REQUESTS = "friendRequests"
     const val FRIENDSHIPS = "friendships"
     const val CONVERSATIONS = "conversations"

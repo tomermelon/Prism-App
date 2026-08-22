@@ -35,7 +35,9 @@ data class Article(
     val scope: String = NewsScope.NATIONAL.firestoreValue,
     val interests: List<String> = emptyList(),
     val url: String = "",
-    val createdAt: Long = 0L
+    val createdAt: Long = 0L,
+    val likeCount: Int = 0,
+    val shareCount: Int = 0
 )
 
 data class FriendRequest(
@@ -73,6 +75,17 @@ data class ChatMessage(
     val imageUrl: String = "",
     val articleId: String = "",
     val articleTitle: String = "",
+    val createdAt: Long = 0L
+)
+
+data class ArticleComment(
+    val id: String = "",
+    val articleId: String = "",
+    val authorId: String = "",
+    val authorUsername: String = "",
+    val text: String = "",
+    val parentId: String = "",
+    val likeCount: Int = 0,
     val createdAt: Long = 0L
 )
 

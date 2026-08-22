@@ -28,7 +28,7 @@ Do these once so the app can talk to your backend:
 ### 4. Create Firestore
 1. **Build** → **Firestore Database** → Create database
 2. Location: pick closest region (e.g. `nam5` / United States)
-3. Start in **test mode** for first bring-up, then publish rules from `firebase/firestore.rules` (Firestore → Rules → paste → Publish)
+3. Start in **test mode** for first bring-up, then publish rules from `firebase/firestore.rules` (Firestore → Rules → paste → Publish). Re-publish whenever rules change (e.g. article comments).
 
 ### 5. Seed starter articles
 1. Firestore → Start collection `articles`
@@ -82,6 +82,36 @@ On your phone: allow install from that source, open the APK, install.
 - `firebase/` — security rules
 - `seed/articles.json` — starter news cards
 
+## News ingest (manual script)
+
+When you want fresh Home/Interests articles, run the seed ingest script. It pulls from NewsAPI, labels bias/scope/topic/interests with Gemini, and writes to Firestore `articles`.
+
+### One-time setup
+1. Put secrets in `seed/.env` (see `seed/.env.example`). You need:
+   - NewsAPI.org key
+   - Google AI Studio (Gemini) key
+   - Firebase service account JSON in `seed/` (path referenced by `GOOGLE_APPLICATION_CREDENTIALS`)
+2. Install Python 3, then:
+
+```powershell
+cd c:\dev\Prism\seed
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### Run when you want updates
+
+```powershell
+cd c:\dev\Prism\seed
+.\.venv\Scripts\activate
+python ingest_news.py
+```
+
+Defaults: `country=us`, 40 articles. Options: `--limit 40`, `--country us`, `--dry-run` (classify only, no Firestore writes).
+
+Later this same `run_ingest()` can move to a scheduled Cloud Function (needs Blaze).
+
 ## Deferred (v2)
 
-Image DMs (Firebase Storage), voice calls, GIFs, article comment threads, Play Store listing, automated news ingest.
+Image DMs (Firebase Storage), voice calls, GIFs, Play Store listing, scheduled Cloud Function news ingest.

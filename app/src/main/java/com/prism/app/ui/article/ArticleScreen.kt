@@ -20,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -36,6 +37,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -57,15 +59,21 @@ import kotlinx.coroutines.launch
 fun ArticleScreen(
     articleId: String,
     uid: String,
+    myUsername: String,
     onBack: () -> Unit,
+    onOpenPrivateChat: (conversationId: String, title: String, draft: String) -> Unit = { _, _, _ -> },
     articleRepository: ArticleRepository = remember { ArticleRepository() },
     socialRepository: SocialRepository = remember { SocialRepository() }
 ) {
     var article by remember { mutableStateOf<Article?>(null) }
     var liked by remember { mutableStateOf(false) }
+    var likeCount by remember { mutableIntStateOf(0) }
+    var shareCount by remember { mutableIntStateOf(0) }
+    var likeInFlight by remember { mutableStateOf(false) }
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
     var showShareSheet by remember { mutableStateOf(false) }
+    var showCommentsSheet by remember { mutableStateOf(false) }
     var conversations by remember { mutableStateOf<List<Conversation>>(emptyList()) }
     var conversationsLoading by remember { mutableStateOf(false) }
     var sharing by remember { mutableStateOf(false) }
@@ -75,13 +83,23 @@ fun ArticleScreen(
 
     LaunchedEffect(articleId) {
         loading = true
-        article = articleRepository.getArticle(articleId)
-        loading = false
-        if (article == null) error = "Article not found"
+        articleRepository.observeArticle(articleId).collectLatest { latest ->
+            article = latest
+            loading = false
+            if (latest == null) {
+                error = "Article not found"
+            } else {
+                error = null
+                if (!likeInFlight) likeCount = latest.likeCount
+                shareCount = latest.shareCount
+            }
+        }
     }
 
     LaunchedEffect(articleId, uid) {
-        articleRepository.observeLiked(articleId, uid).collectLatest { liked = it }
+        articleRepository.observeLiked(articleId, uid).collectLatest { serverLiked ->
+            if (!likeInFlight) liked = serverLiked
+        }
     }
 
     LaunchedEffect(showShareSheet, uid) {
@@ -103,18 +121,43 @@ fun ArticleScreen(
                     }
                 },
                 actions = {
-                    IconButton(
-                        onClick = {
-                            scope.launch {
-                                articleRepository.toggleLike(articleId, uid)
-                            }
-                        }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(end = 4.dp)
                     ) {
-                        Icon(
-                            imageVector = if (liked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                            contentDescription = "Like",
-                            tint = if (liked) MaterialTheme.colorScheme.error
-                            else MaterialTheme.colorScheme.onSurface
+                        IconButton(
+                            enabled = !likeInFlight && article != null,
+                            onClick = {
+                                val wasLiked = liked
+                                liked = !wasLiked
+                                likeCount = (likeCount + if (wasLiked) -1 else 1).coerceAtLeast(0)
+                                likeInFlight = true
+                                scope.launch {
+                                    val result = articleRepository.toggleLike(articleId, uid)
+                                    likeInFlight = false
+                                    result.onFailure {
+                                        liked = wasLiked
+                                        likeCount = (likeCount + if (wasLiked) 1 else -1).coerceAtLeast(0)
+                                        Toast.makeText(
+                                            context,
+                                            it.message ?: "Could not update like",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = if (liked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                                contentDescription = "Like",
+                                tint = if (liked) MaterialTheme.colorScheme.error
+                                else MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                        Text(
+                            text = likeCount.toString(),
+                            style = MaterialTheme.typography.labelLarge,
+                            modifier = Modifier.padding(end = 8.dp)
                         )
                     }
                 }
@@ -156,6 +199,37 @@ fun ArticleScreen(
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = if (liked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                                contentDescription = null,
+                                tint = if (liked) MaterialTheme.colorScheme.error
+                                else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = " $likeCount likes",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Filled.Share,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = " $shareCount shares",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                     Spacer(Modifier.height(16.dp))
                     Text(
                         item.body.ifBlank { item.description },
@@ -183,9 +257,30 @@ fun ArticleScreen(
                             Text("Share in DM")
                         }
                     }
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedButton(
+                        onClick = { showCommentsSheet = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Comments")
+                    }
                 }
             }
         }
+    }
+
+    if (showCommentsSheet) {
+        CommentsSheet(
+            articleId = articleId,
+            articleTitle = article?.title.orEmpty(),
+            uid = uid,
+            myUsername = myUsername,
+            onDismiss = { showCommentsSheet = false },
+            onOpenPrivateChat = { conversationId, title, draft ->
+                showCommentsSheet = false
+                onOpenPrivateChat(conversationId, title, draft)
+            }
+        )
     }
 
     if (showShareSheet) {

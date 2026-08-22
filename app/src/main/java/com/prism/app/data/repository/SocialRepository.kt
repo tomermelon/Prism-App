@@ -270,6 +270,9 @@ class SocialRepository(
             text = articleTitle,
             preview = "Article: $articleTitle"
         )
+        ArticleRepository(db).recordShare(articleId).onFailure { err ->
+            android.util.Log.w("SocialRepository", "shareCount bump failed for $articleId", err)
+        }
     }
 
     suspend fun getOrCreateConversation(

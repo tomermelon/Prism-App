@@ -59,7 +59,11 @@ private enum class MainTab(val label: String, val icon: ImageVector) {
 
 private sealed interface DetailDestination {
     data class Article(val articleId: String) : DetailDestination
-    data class Chat(val conversationId: String, val title: String) : DetailDestination
+    data class Chat(
+        val conversationId: String,
+        val title: String,
+        val initialDraft: String = ""
+    ) : DetailDestination
 }
 
 @Composable
@@ -135,12 +139,22 @@ private fun LoggedInShell(profile: UserProfile) {
                         is DetailDestination.Article -> ArticleScreen(
                             articleId = destination.articleId,
                             uid = profile.uid,
-                            onBack = { popDetail() }
+                            myUsername = profile.username,
+                            onBack = { popDetail() },
+                            onOpenPrivateChat = { conversationId, title, draft ->
+                                // Replace article with chat so back returns to the feed.
+                                detailStack = detailStack.dropLast(1) + DetailDestination.Chat(
+                                    conversationId = conversationId,
+                                    title = title,
+                                    initialDraft = draft
+                                )
+                            }
                         )
                         is DetailDestination.Chat -> ChatScreen(
                             conversationId = destination.conversationId,
                             title = destination.title,
                             uid = profile.uid,
+                            initialDraft = destination.initialDraft,
                             onOpenArticle = { pushDetail(DetailDestination.Article(it)) },
                             onBack = { popDetail() }
                         )

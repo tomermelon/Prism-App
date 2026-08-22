@@ -1,6 +1,7 @@
 package com.prism.app.data.repository
 
 import android.util.Log
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.prism.app.data.FirebasePaths
@@ -48,6 +49,19 @@ class ArticleRepository(
     suspend fun getArticle(id: String): Article? =
         db.collection(FirebasePaths.ARTICLES).document(id).get().await().toArticle()
 
+    fun observeArticle(id: String): Flow<Article?> = callbackFlow {
+        val reg = db.collection(FirebasePaths.ARTICLES).document(id)
+            .addSnapshotListener { snap, error ->
+                if (error != null) {
+                    Log.e(TAG, "observeArticle($id) failed", error)
+                    trySend(null)
+                    return@addSnapshotListener
+                }
+                trySend(snap?.toArticle())
+            }
+        awaitClose { reg.remove() }
+    }
+
     fun observeLiked(articleId: String, uid: String): Flow<Boolean> = callbackFlow {
         val likeId = "${articleId}_$uid"
         val reg = db.collection(FirebasePaths.LIKES).document(likeId)
@@ -57,21 +71,38 @@ class ArticleRepository(
 
     suspend fun toggleLike(articleId: String, uid: String): Result<Boolean> = runCatching {
         val likeId = "${articleId}_$uid"
-        val ref = db.collection(FirebasePaths.LIKES).document(likeId)
-        val existing = ref.get().await()
-        if (existing.exists()) {
-            ref.delete().await()
-            false
-        } else {
-            ref.set(
-                mapOf(
-                    "articleId" to articleId,
-                    "uid" to uid,
-                    "createdAt" to System.currentTimeMillis()
+        val likeRef = db.collection(FirebasePaths.LIKES).document(likeId)
+        val articleRef = db.collection(FirebasePaths.ARTICLES).document(articleId)
+
+        db.runTransaction { tx ->
+            val likeSnap = tx.get(likeRef)
+            val articleSnap = tx.get(articleRef)
+            require(articleSnap.exists()) { "Article not found" }
+
+            if (likeSnap.exists()) {
+                tx.delete(likeRef)
+                tx.update(articleRef, "likeCount", FieldValue.increment(-1))
+                false
+            } else {
+                tx.set(
+                    likeRef,
+                    mapOf(
+                        "articleId" to articleId,
+                        "uid" to uid,
+                        "createdAt" to System.currentTimeMillis()
+                    )
                 )
-            ).await()
-            true
-        }
+                tx.update(articleRef, "likeCount", FieldValue.increment(1))
+                true
+            }
+        }.await()
+    }
+
+    suspend fun recordShare(articleId: String): Result<Unit> = runCatching {
+        require(articleId.isNotBlank()) { "Missing article id" }
+        db.collection(FirebasePaths.ARTICLES).document(articleId)
+            .update("shareCount", FieldValue.increment(1))
+            .await()
     }
 
     suspend fun searchArticles(query: String, limit: Int = 20): List<Article> {
@@ -110,6 +141,11 @@ private fun com.google.firebase.firestore.DocumentSnapshot.toArticle(): Article?
         is String -> value.toLongOrNull() ?: 0L
         else -> 0L
     }
+    fun intField(name: String): Int = when (val value = get(name)) {
+        is Long -> value.toInt()
+        is Number -> value.toInt()
+        else -> 0
+    }.coerceAtLeast(0)
     return Article(
         id = id,
         title = getString("title").orEmpty(),
@@ -121,6 +157,8 @@ private fun com.google.firebase.firestore.DocumentSnapshot.toArticle(): Article?
         scope = getString("scope")?.trim()?.lowercase() ?: "national",
         interests = interests,
         url = getString("url").orEmpty(),
-        createdAt = createdAt
+        createdAt = createdAt,
+        likeCount = intField("likeCount"),
+        shareCount = intField("shareCount")
     )
 }
