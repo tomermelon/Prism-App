@@ -39,7 +39,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.prism.app.data.model.UserProfile
-import com.prism.app.ui.article.ArticleScreen
 import com.prism.app.ui.dm.ChatScreen
 import com.prism.app.ui.dm.DmListScreen
 import com.prism.app.ui.home.HomeScreen
@@ -58,7 +57,6 @@ private enum class MainTab(val label: String, val icon: ImageVector) {
 }
 
 private sealed interface DetailDestination {
-    data class Article(val articleId: String) : DetailDestination
     data class Chat(
         val conversationId: String,
         val title: String,
@@ -112,12 +110,19 @@ private fun LoggedInShell(profile: UserProfile) {
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Stays composed under details so back does not rebuild tabs.
         MainScaffold(
             profile = profile,
-            onOpenArticle = { pushDetail(DetailDestination.Article(it)) },
             onOpenChat = { id, title ->
                 pushDetail(DetailDestination.Chat(id, title))
+            },
+            onOpenPrivateChat = { conversationId, title, draft ->
+                pushDetail(
+                    DetailDestination.Chat(
+                        conversationId = conversationId,
+                        title = title,
+                        initialDraft = draft
+                    )
+                )
             }
         )
 
@@ -136,26 +141,11 @@ private fun LoggedInShell(profile: UserProfile) {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     when (destination) {
-                        is DetailDestination.Article -> ArticleScreen(
-                            articleId = destination.articleId,
-                            uid = profile.uid,
-                            myUsername = profile.username,
-                            onBack = { popDetail() },
-                            onOpenPrivateChat = { conversationId, title, draft ->
-                                // Replace article with chat so back returns to the feed.
-                                detailStack = detailStack.dropLast(1) + DetailDestination.Chat(
-                                    conversationId = conversationId,
-                                    title = title,
-                                    initialDraft = draft
-                                )
-                            }
-                        )
                         is DetailDestination.Chat -> ChatScreen(
                             conversationId = destination.conversationId,
                             title = destination.title,
                             uid = profile.uid,
                             initialDraft = destination.initialDraft,
-                            onOpenArticle = { pushDetail(DetailDestination.Article(it)) },
                             onBack = { popDetail() }
                         )
                     }
@@ -168,8 +158,8 @@ private fun LoggedInShell(profile: UserProfile) {
 @Composable
 private fun MainScaffold(
     profile: UserProfile,
-    onOpenArticle: (String) -> Unit,
-    onOpenChat: (conversationId: String, title: String) -> Unit
+    onOpenChat: (conversationId: String, title: String) -> Unit,
+    onOpenPrivateChat: (conversationId: String, title: String, draft: String) -> Unit
 ) {
     var selectedTabIndex by rememberSaveable { mutableIntStateOf(MainTab.Home.ordinal) }
     val pagerState = rememberPagerState(
@@ -210,11 +200,11 @@ private fun MainScaffold(
             when (MainTab.entries[page]) {
                 MainTab.Home -> HomeScreen(
                     profile = profile,
-                    onOpenArticle = onOpenArticle
+                    onOpenPrivateChat = onOpenPrivateChat
                 )
                 MainTab.Interests -> InterestsScreen(
                     profile = profile,
-                    onOpenArticle = onOpenArticle
+                    onOpenPrivateChat = onOpenPrivateChat
                 )
                 MainTab.Dms -> DmListScreen(
                     profile = profile,

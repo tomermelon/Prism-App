@@ -1,6 +1,8 @@
 package com.prism.app.ui.dm
 
+import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -45,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.prism.app.data.model.Article
@@ -67,7 +70,6 @@ fun ChatScreen(
     initialDraft: String = "",
     pendingArticleShare: Article? = null,
     onArticleShared: () -> Unit = {},
-    onOpenArticle: (String) -> Unit,
     onBack: () -> Unit,
     socialRepository: SocialRepository = remember { SocialRepository() },
     articleRepository: ArticleRepository = remember { ArticleRepository() }
@@ -79,6 +81,7 @@ fun ChatScreen(
     var articleResults by remember { mutableStateOf<List<Article>>(emptyList()) }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     val imagePicker = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
@@ -194,8 +197,20 @@ fun ChatScreen(
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.clickable {
-                                    if (message.articleId.isNotBlank()) {
-                                        onOpenArticle(message.articleId)
+                                    if (message.articleId.isBlank()) return@clickable
+                                    scope.launch {
+                                        val url = articleRepository.getArticle(message.articleId)?.url
+                                        if (!url.isNullOrBlank()) {
+                                            context.startActivity(
+                                                Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                            )
+                                        } else {
+                                            Toast.makeText(
+                                                context,
+                                                "No publisher link",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
                                     }
                                 }
                             )

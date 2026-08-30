@@ -46,6 +46,53 @@ class ArticleRepository(
         awaitClose { reg.remove() }
     }
 
+    /** Single newest feed — avoids combining multiple scoped queries that can stall Home. */
+    fun observeLatest(limit: Int = 50): Flow<List<Article>> = callbackFlow {
+        Log.i(TAG, "observeLatest: attaching listener limit=$limit")
+        val reg = db.collection(FirebasePaths.ARTICLES)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .limit(limit.toLong())
+            .addSnapshotListener { snap, error ->
+                try {
+                    if (error != null) {
+                        Log.e(TAG, "observeLatest failed", error)
+                        trySend(emptyList())
+                        return@addSnapshotListener
+                    }
+                    val list = snap?.documents?.mapNotNull { doc ->
+                        runCatching { doc.toArticle() }.getOrNull()
+                    }.orEmpty()
+                    Log.i(TAG, "observeLatest: emitted ${list.size} articles")
+                    trySend(list)
+                } catch (e: Exception) {
+                    Log.e(TAG, "observeLatest callback crashed", e)
+                    trySend(emptyList())
+                }
+            }
+        awaitClose {
+            Log.i(TAG, "observeLatest: removing listener")
+            reg.remove()
+        }
+    }
+
+    /** One-shot fetch so Home cannot spin forever if the snapshot listener hangs. */
+    suspend fun fetchLatest(limit: Int = 50): List<Article> {
+        Log.i(TAG, "fetchLatest: starting limit=$limit")
+        return try {
+            val snap = db.collection(FirebasePaths.ARTICLES)
+                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .limit(limit.toLong())
+                .get()
+                .await()
+            val list = snap.documents.mapNotNull { it.toArticle() }
+            Log.i(TAG, "fetchLatest: got ${list.size} articles")
+            list
+        } catch (e: Exception) {
+            Log.e(TAG, "fetchLatest failed", e)
+            throw e
+        }
+    }
+
     suspend fun getArticle(id: String): Article? =
         db.collection(FirebasePaths.ARTICLES).document(id).get().await().toArticle()
 

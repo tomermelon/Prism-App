@@ -1,5 +1,6 @@
 package com.prism.app.data.repository
 
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
@@ -79,15 +80,21 @@ class AuthRepository(
     fun signOut() = auth.signOut()
 
     fun observeProfile(uid: String): Flow<UserProfile?> = callbackFlow {
+        Log.i(TAG, "observeProfile: attaching uid=$uid")
         val reg = db.collection(FirebasePaths.USERS).document(uid)
             .addSnapshotListener { snap, error ->
                 if (error != null) {
+                    Log.e(TAG, "observeProfile failed uid=$uid", error)
                     trySend(null)
                     return@addSnapshotListener
                 }
+                Log.i(TAG, "observeProfile: emit exists=${snap?.exists()}")
                 trySend(snap?.toUserProfile())
             }
-        awaitClose { reg.remove() }
+        awaitClose {
+            Log.i(TAG, "observeProfile: removing uid=$uid")
+            reg.remove()
+        }
     }
 
     suspend fun getProfile(uid: String): UserProfile? =
@@ -131,6 +138,10 @@ class AuthRepository(
             .get()
             .await()
         return snap.getString("uid")
+    }
+
+    companion object {
+        private const val TAG = "AuthRepository"
     }
 }
 
